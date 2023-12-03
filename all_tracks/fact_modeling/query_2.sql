@@ -1,6 +1,7 @@
 CREATE TABLE abbad.user_devices_cumulated (
   user_id BIGINT,
-  device_activity_datelist MAP(VARCHAR, ARRAY(DATE)),
+  browser_type VARCHAR,
+  dates_active ARRAY(date),
   date DATE
 ) WITH (
   format = 'PARQUET',
