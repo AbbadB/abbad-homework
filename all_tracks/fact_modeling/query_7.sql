@@ -1,10 +1,12 @@
-CREATE TABLE abbad.host_activity_reduced (
-month INTEGER,
-host VARCHAR,
-hit_array ARRAY(INTEGER),
-unique_visitors_array ARRAY(INTEGER)
-)
-WITH (
-  format = 'PARQUET',
-  partitioning = ARRAY['month', 'host']
-)
+CREATE TABLE
+  abbad.host_activity_reduced (
+    host VARCHAR,
+    metric_name VARCHAR,
+    metric_array ARRAY (INTEGER),
+    month_start VARCHAR
+  )
+WITH
+  (
+    FORMAT = 'PARQUET',
+    partitioning = ARRAY['metric_name', 'month_start']
+  )
