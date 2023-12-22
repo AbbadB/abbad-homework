@@ -105,7 +105,28 @@ def log_aggregation():
                     col("host").count.alias("num_hits")
             ) \
             .execute_insert(aggregated_table)
+        
+        # Calculate total hits and sessions per host
+        total_hits_and_sessions = t_env.from_path(source_table)\
+            .window(
+                Session.with_gap(lit(5).minutes).on(col("window_timestamp")).alias("s")
+            ).group_by(
+                col("s"),
+                col("host"),
+                col("ip")
+            ).select(
+                col("host"),
+                col("host").count.alias("num_hits"),
+                lit(1).alias("num_sessions")
+            )
 
+        # Calculate average hits per session
+        average_hits_per_session = total_hits_and_sessions.group_by(
+            col("host")
+        ).select(
+            col("host"),
+            (col("num_hits").sum / col("num_sessions").sum).alias("average_hits_per_session")
+        )
 
 
     except Exception as e:
