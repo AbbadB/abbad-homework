@@ -10,6 +10,7 @@ def create_aggregated_events_sink_postgres(t_env):
     sink_ddl = f"""
         CREATE TABLE {table_name} (
             event_hour TIMESTAMP(3),
+            ip VARCHAR,
             host VARCHAR,
             num_hits BIGINT
         ) WITH (
@@ -24,24 +25,6 @@ def create_aggregated_events_sink_postgres(t_env):
     t_env.execute_sql(sink_ddl)
     return table_name
 
-
-def create_aggregated_events_referrer_sink_postgres(t_env):
-    table_name = 'average_web_events'
-    sink_ddl = f"""
-        CREATE TABLE {table_name} (
-            host VARCHAR PRIMARY KEY,
-            average NUMERIC
-        ) WITH (
-            'connector' = 'jdbc',
-            'url' = '{os.environ.get("POSTGRES_URL")}',
-            'table-name' = '{table_name}',
-            'username' = '{os.environ.get("POSTGRES_USER", "postgres")}',
-            'password' = '{os.environ.get("POSTGRES_PASSWORD", "postgres")}',
-            'driver' = 'org.postgresql.Driver'
-        );
-        """
-    t_env.execute_sql(sink_ddl)
-    return table_name
 
 def create_processed_events_source_kafka(t_env):
     table_name = "process_events_kafka"
@@ -106,29 +89,6 @@ def log_aggregation():
             ) \
             .execute_insert(aggregated_table)
         
-        # Calculate total hits and sessions per host
-        total_hits_and_sessions = t_env.from_path(source_table)\
-            .window(
-                Session.with_gap(lit(5).minutes).on(col("window_timestamp")).alias("s")
-            ).group_by(
-                col("s"),
-                col("host"),
-                col("ip")
-            ).select(
-                col("host"),
-                col("host").count.alias("num_hits"),
-                lit(1).alias("num_sessions")
-            )
-
-        # Calculate average hits per session
-        average_hits_per_session = total_hits_and_sessions.group_by(
-            col("host")
-        ).select(
-            col("host"),
-            (col("num_hits").sum / col("num_sessions").sum).alias("average_hits_per_session")
-        )
-
-
     except Exception as e:
         print("Writing records from Kafka to JDBC failed:", str(e))
 
