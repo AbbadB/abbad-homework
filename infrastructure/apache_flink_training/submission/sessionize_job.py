@@ -85,6 +85,7 @@ def log_aggregation():
             .select(
                     col("s").start.alias("event_hour"),
                     col("host"),
+                    col("ip"),
                     col("host").count.alias("num_hits")
             ) \
             .execute_insert(aggregated_table)
