@@ -47,7 +47,7 @@ SELECT
   CASE
     WHEN active_season - first_active_season = 0 THEN 'New'
     WHEN active_season - last_active_season = 0 THEN 'Continued Playing'
-    WHEN active_season_yesterday - active_season > 1 THEN 'Returned from Retirement'
+    WHEN active_season - active_season_yesterday > 1 THEN 'Returned from Retirement'
     WHEN active_season IS NULL
     AND partition_season - last_active_season = 1 THEN 'Retired'
     ELSE 'Stayed Retired'
